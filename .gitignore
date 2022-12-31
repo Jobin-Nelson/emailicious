@@ -1,3 +1,4 @@
 .env
 venv
 cronjob.logs
+__pycache__
