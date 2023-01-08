@@ -1,18 +1,12 @@
 '''This module tests the updater'''
 from email.message import EmailMessage
-import urllib.request, os
-from dotenv import load_dotenv
+import urllib.request
 import updater
 import pytest
+import importlib
 
-# @pytest.fixture(autouse=True)
-# def new_updater():
-#     load_dotenv()
-#
-#     updater.EMAIL_SENDER = os.getenv('EMAIL_SENDER')
-#     updater.EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
-#     updater.EMAIL_RECEIVER = os.getenv('EMAIL_RECEIVER')
-#     return updater
+def setup_function():
+    importlib.reload(updater)
 
 def has_connection() -> bool:
     url = 'http://google.com'
@@ -73,10 +67,6 @@ def test_send_email(tmp_path, capsys):
     body = 'Testing send_email() function\n'
     tmp_file.write_text(body)
 
-    load_dotenv()
-
-    updater.EMAIL_SENDER = os.getenv('EMAIL_SENDER')
-    updater.EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
     updater.EMAIL_RECEIVER = updater.EMAIL_SENDER
 
     updater.DAILY_UPDATE_PATH = tmp_file

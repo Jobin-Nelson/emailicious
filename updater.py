@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''This script sends email updates''' 
+'''This module sends email updates''' 
 from __future__ import annotations
 from dotenv import load_dotenv
 from datetime import datetime
