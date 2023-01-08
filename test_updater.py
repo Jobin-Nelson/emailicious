@@ -16,19 +16,16 @@ def has_connection() -> bool:
         return False
     return True
 
-def test_env_is_empty():
-    updater.EMAIL_SENDER = ''
-    assert updater.is_env_set() == False
-
-def test_env_not_found():
-    updater.EMAIL_SENDER = None
-    assert updater.is_env_set() == False
-
-def test_env_all_set():
-    updater.EMAIL_SENDER = 'sender@gmail.com'
-    updater.EMAIL_PASSWORD = 'senderpass$'
-    updater.EMAIL_RECEIVER = 'receiver@gmail.com'
-    assert updater.is_env_set()
+@pytest.mark.parametrize('email_sender, email_password, email_receiver, expected_result', [
+    ('', 'senderpass$', 'receiver@gmail.com', False),
+    (None, 'senderpass$', 'receiver@gmail.com', False),
+    ('sender@gmail.com', 'senderpass$', 'receiver@gmail.com', True),
+])
+def test_is_env_set(email_sender, email_password, email_receiver, expected_result):
+    updater.EMAIL_SENDER = email_sender
+    updater.EMAIL_PASSWORD = email_password
+    updater.EMAIL_RECEIVER = email_receiver
+    assert updater.is_env_set() == expected_result
 
 def test_email_body_if_path_not_exist(tmp_path):
     updater.DAILY_UPDATE_PATH = tmp_path / 'non-existing-dir' / 'non-existing-file.txt'
