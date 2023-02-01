@@ -7,7 +7,7 @@ A script to automate sending emails
 - Can be used as a cron job
 
 ```
-0 18 * * Mon-Fri $HOME/path/to/python $HOME/path/to/updater.py >> $HOME/path/to/cronjob.logs 2>&1
+0 18 * * Mon-Fri /path/to/venv/bin/python /path/to/updater.py >> /path/to/cronjob.logs 2>&1
 ```
 
 - Use bash alias for easy editing of email body
