@@ -15,7 +15,7 @@ EMAIL_RECEIVER = os.getenv('EMAIL_RECEIVER')
 
 TODAY = datetime.today()
 
-DAILY_UPDATE_PATH = Path.home() / 'playground' / 'dev' / 'illumina' / 'daily_updates' / f'{TODAY:%Y-%m-%d}.txt'
+DAILY_UPDATE_PATH = Path.home() / 'playground' / 'dev' / 'illumina' / 'daily_updates' / f'{TODAY:%Y-%m-%d}.md'
 
 PLACEHOLDER_BODY = 'No updates for today\n'
 
