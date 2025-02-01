@@ -3,13 +3,11 @@
 
 from __future__ import annotations
 from enum import IntEnum
-from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
 from email.message import EmailMessage
-import smtplib, ssl, os, base64, sys
-
-load_dotenv()
+import smtplib, ssl, os, base64, sys, tomllib
+from typing import Any, NoReturn
 
 
 class ExitCode(IntEnum):
@@ -17,18 +15,50 @@ class ExitCode(IntEnum):
     EMAIL_NOT_SEND = 2
 
 
+def bail(message: str, code: ExitCode) -> NoReturn:
+    '''Prints a message and exits with a code'''
+    print(message, file=sys.stderr)
+    sys.exit(code.value)
+
+
 class Config:
     def __init__(self) -> None:
-        self.email_sender = os.getenv('EMAIL_SENDER', '')
-        self.email_password = os.getenv('EMAIL_PASSWORD', '')
-        self.email_receiver = os.getenv('EMAIL_RECEIVER', '')
-        self.daily_update_dir = os.getenv('DAILY_UPDATE_DIR', '')
+        self.config_path = Path.home() / '.config' / 'mailinator' / 'config.toml'
+        self.config = self._read_config()
 
-        self.validate()
+        self.email_sender = self.config.get('email_sender', '')
+        self.email_password = self.config.get('email_password', '')
+        self.email_receiver = self.config.get('email_receiver', '')
+        self.daily_update_dir = self.config.get('daily_update_dir', '')
+
+        self._validate()
         self.today = datetime.today()
-        self.daily_update_path = Path(self.daily_update_dir).expanduser().resolve() / f'{self.today:%Y-%m-%d}.md'
+        self.daily_update_path = (
+            Path(self.daily_update_dir).expanduser().resolve()
+            / f'{self.today:%Y-%m-%d}.md'
+        )
 
-    def validate(self) -> None:
+    def _read_config(self) -> dict[str, Any]:
+        try:
+            with open(self.config_path, 'rb') as file:
+                return tomllib.load(file)
+        except Exception:
+            self.config_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.config_path, 'w') as file:
+                file.write(
+                    'email_sender = ""\n'
+                    'email_password = ""\n'
+                    'email_receiver = ""\n'
+                    'daily_update_dir = ""\n'
+                )
+            bail(
+                f'Config file not found at {self.config_path}.\n'
+                'Auto generating the config file.\n'
+                'Please fill out the config file before executing again.\n',
+                ExitCode.CONFIG_NOT_FOUND,
+            )
+
+    def _validate(self) -> None:
         '''Checks if required environment variables are set'''
         missing_configs = [
             e
@@ -49,8 +79,8 @@ def main() -> int:
     '''Sends an email update for today'''
     config = Config()
 
-    email_to_sent = gen_email(config)
-    send_email(config, email_to_sent)
+    # email_to_sent = gen_email(config)
+    # send_email(config, email_to_sent)
     return 0
 
 
@@ -80,8 +110,13 @@ def send_email(config: Config, email_to_sent: EmailMessage) -> None:
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-            smtp.login(config.email_sender, base64.b64decode(config.email_password).decode().strip())
-            smtp.sendmail(config.email_sender, config.email_receiver, email_to_sent.as_string())
+            smtp.login(
+                config.email_sender,
+                base64.b64decode(config.email_password).decode().strip(),
+            )
+            smtp.sendmail(
+                config.email_sender, config.email_receiver, email_to_sent.as_string()
+            )
     except smtplib.SMTPException as e:
         print(f'Could not send email, encountered an exception {e}', file=sys.stderr)
         sys.exit(ExitCode.EMAIL_NOT_SEND)

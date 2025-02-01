@@ -2,3 +2,4 @@
 venv
 cronjob.logs
 __pycache__
+todo.md
