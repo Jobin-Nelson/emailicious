@@ -3,8 +3,8 @@ from email.message import EmailMessage
 from pathlib import Path
 import smtplib, ssl
 
-from utils import bail, ExitCode
-from config import Config
+from emailicious.utils import bail, ExitCode
+from emailicious.config import Config
 
 
 def gmail_main() -> int:

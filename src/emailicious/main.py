@@ -3,7 +3,7 @@
 
 import argparse
 
-from gmail import gmail_main
+from emailicious.gmail import gmail_main
 
 
 def main() -> int:

@@ -4,6 +4,11 @@ version = "0.1.0"
 description = "This is a Python package that automates sending of emails"
 readme = "README.md"
 requires-python = ">=3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "msal>=1.31.1",
 ]
@@ -12,3 +17,7 @@ dependencies = [
 dev = [
     "twine>=6.1.0",
 ]
+
+[project.scripts]
+emailicious = "emailicious.main:main"
+

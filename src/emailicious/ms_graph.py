@@ -2,8 +2,8 @@ from enum import Enum
 import msal
 import webbrowser
 
-from config import Config
-from utils import bail, ExitCode
+from emailicious.config import Config
+from emailicious.utils import bail, ExitCode
 
 
 class MS_CONSTANTS(Enum):

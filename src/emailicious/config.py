@@ -2,7 +2,7 @@ import configparser
 from datetime import datetime
 from pathlib import Path
 
-from utils import bail, ExitCode
+from emailicious.utils import bail, ExitCode
 
 class Config:
     config_path = Path.home() / '.config' / 'mailinator' / 'config.ini'
