@@ -6,8 +6,8 @@ from enum import IntEnum
 from datetime import datetime
 from pathlib import Path
 from email.message import EmailMessage
-import smtplib, ssl, os, base64, sys, tomllib
-from typing import Any, NoReturn
+import smtplib, ssl, os, base64, sys, configparser
+from typing import NoReturn
 
 
 class ExitCode(IntEnum):
@@ -22,58 +22,34 @@ def bail(message: str, code: ExitCode) -> NoReturn:
 
 
 class Config:
-    config_path = Path.home() / '.config' / 'mailinator' / 'config.toml'
+    config_path = Path.home() / '.config' / 'mailinator' / 'config.ini'
     today = datetime.today()
+    _config_template_path = Path(__file__).parent / 'config_template.ini'
 
     def __init__(self) -> None:
-        self.config = self._read_config()
-
-        self.email_sender = self.config.get('email_sender', '')
-        self.email_password = self.config.get('email_password', '')
-        self.email_receiver = self.config.get('email_receiver', '')
-        self.daily_update_dir = self.config.get('daily_update_dir', '')
-
-        self._validate()
+        self.config = configparser.ConfigParser()
+        self._read_config()
+        print(vars(self.config))
         self.daily_update_path = (
-            Path(self.daily_update_dir).expanduser().resolve()
+            Path(self.config['data']['daily_update_dir']).expanduser().resolve()
             / f'{Config.today:%Y-%m-%d}.md'
         )
 
-    def _read_config(self) -> dict[str, Any]:
-        try:
-            with open(Config.config_path, 'rb') as file:
-                return tomllib.load(file)
-        except Exception:
+    def _read_config(self) -> None:
+        if not self.config.read(self.config_path):
+            if self.config_path.exists():
+                self.config_path.rename(self.config_path.with_suffix('.bak'))
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.config_path, 'w') as file:
-                file.write(
-                    'email_sender = ""\n'
-                    'email_password = ""\n'
-                    'email_receiver = ""\n'
-                    'daily_update_dir = ""\n'
-                )
+                config_template = configparser.ConfigParser()
+                config_template.read(Config._config_template_path)
+                config_template.write(file)
             bail(
                 f'Config file not found at {self.config_path}.\n'
                 'Auto generating the config file.\n'
                 'Please fill out the config file before executing again.\n',
                 ExitCode.CONFIG_NOT_FOUND,
             )
-
-    def _validate(self) -> None:
-        '''Checks if required environment variables are set'''
-        missing_configs = [
-            e
-            for e in [
-                self.email_sender,
-                self.email_password,
-                self.email_receiver,
-                self.daily_update_dir,
-            ]
-            if not e
-        ]
-        if missing_configs:
-            print(f'ERROR: Missing config fields {missing_configs}', file=sys.stderr)
-            sys.exit(ExitCode.CONFIG_NOT_FOUND)
 
 
 def main() -> int:
@@ -105,7 +81,7 @@ def get_body(config: Config) -> str:
         return 'No updates for today\n'
 
 
-def send_email(config: Config, email_to_sent: EmailMessage) -> None:
+def send_gmail(config: Config, email_to_sent: EmailMessage) -> None:
     '''Sends the email'''
     context = ssl.create_default_context()
 
