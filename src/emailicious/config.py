@@ -5,7 +5,7 @@ from pathlib import Path
 from emailicious.utils import bail, ExitCode
 
 class Config:
-    config_path = Path.home() / '.config' / 'mailinator' / 'config.ini'
+    config_path = Path.home() / '.config' / 'emailicious' / 'config.ini'
     today = datetime.today()
     _config_template_path = Path(__file__).parent / 'config_template.ini'
 
