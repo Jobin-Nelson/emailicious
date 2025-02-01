@@ -22,8 +22,10 @@ def bail(message: str, code: ExitCode) -> NoReturn:
 
 
 class Config:
+    config_path = Path.home() / '.config' / 'mailinator' / 'config.toml'
+    today = datetime.today()
+
     def __init__(self) -> None:
-        self.config_path = Path.home() / '.config' / 'mailinator' / 'config.toml'
         self.config = self._read_config()
 
         self.email_sender = self.config.get('email_sender', '')
@@ -32,15 +34,14 @@ class Config:
         self.daily_update_dir = self.config.get('daily_update_dir', '')
 
         self._validate()
-        self.today = datetime.today()
         self.daily_update_path = (
             Path(self.daily_update_dir).expanduser().resolve()
-            / f'{self.today:%Y-%m-%d}.md'
+            / f'{Config.today:%Y-%m-%d}.md'
         )
 
     def _read_config(self) -> dict[str, Any]:
         try:
-            with open(self.config_path, 'rb') as file:
+            with open(Config.config_path, 'rb') as file:
                 return tomllib.load(file)
         except Exception:
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
