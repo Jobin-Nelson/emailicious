@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-'''This module sends email updates''' 
+'''This module sends email updates'''
+
 from __future__ import annotations
+from enum import IntEnum
 from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
@@ -9,63 +11,83 @@ import smtplib, ssl, os, base64, sys
 
 load_dotenv()
 
-EMAIL_SENDER = os.getenv('EMAIL_SENDER')
-EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
-EMAIL_RECEIVER = os.getenv('EMAIL_RECEIVER')
 
-TODAY = datetime.today()
+class ExitCode(IntEnum):
+    CONFIG_NOT_FOUND = 1
+    EMAIL_NOT_SEND = 2
 
-DAILY_UPDATE_PATH = Path.home() / 'playground' / 'dev' / 'illumina' / 'daily_updates' / f'{TODAY:%Y-%m-%d}.md'
 
-PLACEHOLDER_BODY = 'No updates for today\n'
+class Config:
+    def __init__(self) -> None:
+        self.email_sender = os.getenv('EMAIL_SENDER', '')
+        self.email_password = os.getenv('EMAIL_PASSWORD', '')
+        self.email_receiver = os.getenv('EMAIL_RECEIVER', '')
+        self.daily_update_dir = os.getenv('DAILY_UPDATE_DIR', '')
+
+        self.validate()
+        self.today = datetime.today()
+        self.daily_update_path = Path(self.daily_update_dir).expanduser().resolve() / f'{self.today:%Y-%m-%d}.md'
+
+    def validate(self) -> None:
+        '''Checks if required environment variables are set'''
+        missing_configs = [
+            e
+            for e in [
+                self.email_sender,
+                self.email_password,
+                self.email_receiver,
+                self.daily_update_dir,
+            ]
+            if not e
+        ]
+        if missing_configs:
+            print(f'ERROR: Missing config fields {missing_configs}', file=sys.stderr)
+            sys.exit(ExitCode.CONFIG_NOT_FOUND)
+
 
 def main() -> int:
     '''Sends an email update for today'''
-    if not is_env_set():
-        print('Environment variables are not set properly', file=sys.stderr)
-        return 1
+    config = Config()
 
-    email_to_sent = gen_email()
-
-    send_email(email_to_sent)
-
+    email_to_sent = gen_email(config)
+    send_email(config, email_to_sent)
     return 0
 
-def is_env_set() -> bool:
-    '''Checks if required environment variables are set'''
-    return all(e for e in [EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER])
 
-def gen_email() -> EmailMessage:
+def gen_email(config: Config) -> EmailMessage:
     '''Generates today's email'''
     subject = 'Daily update'
 
-    body = get_body() or PLACEHOLDER_BODY
-
     em = EmailMessage()
-    em['From'] = EMAIL_SENDER
-    em['To'] = EMAIL_RECEIVER
+    em['From'] = config.email_sender
+    em['To'] = config.email_receiver
     em['Subject'] = subject
-    em.set_content(body)
+    em.set_content(get_body(config))
     return em
 
-def get_body() -> str | None:
-    '''Returns the file contents for today'''
-    if DAILY_UPDATE_PATH.exists():
-        return DAILY_UPDATE_PATH.read_text()
 
-def send_email(email_to_sent: EmailMessage) -> None:
+def get_body(config: Config) -> str:
+    '''Returns the file contents for today'''
+    if config.daily_update_path.exists():
+        return config.daily_update_path.read_text()
+    else:
+        return 'No updates for today\n'
+
+
+def send_email(config: Config, email_to_sent: EmailMessage) -> None:
     '''Sends the email'''
     context = ssl.create_default_context()
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-            smtp.login(EMAIL_SENDER, base64.b64decode(EMAIL_PASSWORD).decode().strip())
-            smtp.sendmail(EMAIL_SENDER, EMAIL_RECEIVER, email_to_sent.as_string())
+            smtp.login(config.email_sender, base64.b64decode(config.email_password).decode().strip())
+            smtp.sendmail(config.email_sender, config.email_receiver, email_to_sent.as_string())
     except smtplib.SMTPException as e:
         print(f'Could not send email, encountered an exception {e}', file=sys.stderr)
-        sys.exit(1)
+        sys.exit(ExitCode.EMAIL_NOT_SEND)
     else:
-        print(f'Daily email update send for {TODAY:%Y-%m-%d}')
+        print(f'Daily email update send for {config.today:%Y-%m-%d}')
+
 
 if __name__ == '__main__':
     raise SystemExit(main())
