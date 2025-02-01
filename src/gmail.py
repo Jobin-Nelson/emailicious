@@ -1,7 +1,7 @@
 
 from email.message import EmailMessage
 from pathlib import Path
-import smtplib, ssl, base64
+import smtplib, ssl
 
 from utils import bail, ExitCode
 from config import Config
@@ -23,7 +23,7 @@ def _gen_gmail(config: Config) -> EmailMessage:
     em['From'] = gmail_config['email_sender']
     em['To'] = gmail_config['email_receiver']
     em['Subject'] = subject
-    em.set_content(get_body(config.daily_update_path))
+    em.set_content(_get_body(config.daily_update_path))
     return em
 
 
@@ -44,7 +44,7 @@ def _send_gmail(config: Config, email_to_sent: EmailMessage) -> None:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
             smtp.login(
                 gmail_config['email_sender'],
-                base64.b64decode(gmail_config['email_password']).decode().strip(),
+                gmail_config['email_password'],
             )
             smtp.sendmail(
                 gmail_config['email_sender'],
