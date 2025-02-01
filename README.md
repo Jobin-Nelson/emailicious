@@ -13,8 +13,8 @@ A script to automate sending emails
 - Use bash alias for easy editing of email body
 
 ```
-alias eup="/usr/bin/nvim \$HOME/path/to/daily_updates/\$(date -d \"\$([[ \$(date -d '+6 hours' +%u) -gt 5 ]] && echo 'next Monday' || echo '+6 hours')\" '+%Y-%m-%d').txt"
+alias eup="/usr/bin/nvim \$HOME/path/to/daily_updates/\$(date -d \"\$([[ \$(date -d '+2 hours' +%u) -gt 5 ]] && echo 'next Monday' || echo '+2 hours')\" '+%Y-%m-%d').txt"
 ```
 
-> The cron job above sends email at 6pm on every working day.
-> The bash alias above opens the file for next working day if called after 6pm.
+> The cron job above sends email at 10pm on every working day.
+> The bash alias above opens the file for next working day if called after 10pm.
