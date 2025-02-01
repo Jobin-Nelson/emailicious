@@ -1,10 +1,14 @@
 [project]
-name = "mailinator"
+name = "emailicious"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is a Python package that automates sending of emails"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "httpx>=0.28.1",
     "msal>=1.31.1",
+]
+
+[dependency-groups]
+dev = [
+    "twine>=6.1.0",
 ]
