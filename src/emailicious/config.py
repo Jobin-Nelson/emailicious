@@ -7,7 +7,7 @@ from emailicious.utils import bail, ExitCode
 class Config:
     config_path = Path.home() / '.config' / 'emailicious' / 'config.ini'
     today = datetime.today()
-    _config_template_path = Path(__file__).parent / 'config_template.ini'
+    _config_template_path = Path(__file__).parent.parent.parent / 'config_template.ini'
 
     def __init__(self) -> None:
         self.config = configparser.ConfigParser()
