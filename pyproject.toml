@@ -1,6 +1,6 @@
 [project]
 name = "emailicious"
-version = "0.1.1"
+version = "0.1.2"
 description = "This is a Python package that automates sending of emails"
 readme = "README.md"
 requires-python = ">=3.11"
