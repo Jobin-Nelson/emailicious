@@ -18,3 +18,4 @@ alias eup="/usr/bin/nvim \$HOME/path/to/daily_updates/\$(date -d \"\$([[ \$(date
 
 > The cron job above sends email at 10pm on every working day.
 > The bash alias above opens the file for next working day if called after 10pm.
+some change
